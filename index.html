@@ -1,9 +1,10 @@
-<!doctype html>
+from pathlib import Path
+
+html = r'''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080d1b"><meta name="description" content="SARA — your personal voice AI companion">
-
 <title>SARA — Personal AI</title>
 <style>
 :root{--bg:#070b16;--panel:#101a2d;--panel2:#14223a;--cyan:#66e5ff;--violet:#a58bff;--muted:#91a1bd;--white:#f4f8ff;--line:#263754}
@@ -55,30 +56,198 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 <div class="footer">SARA runs with your permission. Secure payments and sensitive actions stay protected by your phone and official apps.<br>Browser edition • Online features require internet</div>
 </main>
 <script>
-const $=id=>document.getElementById(id);let lastReply="I’m here. Tell me what you need.";let deferredPrompt=null;
-function say(text){lastReply=text;$("reply").textContent=text}
-function notify(text){$("notice").textContent=text;$("notice").classList.add("show")}
-function hideNotice(){$("notice").classList.remove("show")}
-function speak(text){if(!("speechSynthesis"in window)){notify("Voice output is not supported in this browser.");return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang="en-IN";speechSynthesis.speak(u)}
-const appLinks={
-"whatsapp":"https://wa.me/","youtube":"https://www.youtube.com/","instagram":"https://www.instagram.com/","gpay":"https://pay.google.com/","google pay":"https://pay.google.com/","camera":"intent://camera#Intent;scheme=android-app;end","maps":"https://maps.google.com/","gmail":"https://mail.google.com/","chrome":"https://www.google.com/"
-};
-function openApp(name){let key=name.toLowerCase().trim();let url=appLinks[key];if(!url){say("I can’t launch "+name+" directly from the browser yet. Try the app shortcut or open it from your phone.");return}say("Opening "+name+".");window.location.href=url;if(key.includes("gpay"))notify("SARA can open GPay, but cannot make or approve payments. Verify every payment inside the official GPay app.");}
-function handle(raw){let c=raw.trim();if(!c)return;$("said").textContent=c;hideNotice();let s=c.toLowerCase();
-if(/^(open|launch|start)\s+/.test(s)){let n=c.replace(/^(open|launch|start)\s+/i,"");openApp(n);return}
-if(s.includes("time")||s.includes("date")||s.includes("mani")||s.includes("neram")){let d=new Date();say("It’s "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+" on "+d.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"})+".");return}
-if(s.includes("whatsapp")&&(/message|text|send|type/.test(s))){let match=c.match(/(?:message|text|send|type)(?:\s+to)?\s+(.+?)\s+(?:saying|that)\s+(.+)/i);if(match){let who=match[1],msg=match[2];say("I can prepare a WhatsApp message. Choose the contact in WhatsApp and review before sending.");window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");}else{say("Opening WhatsApp. You can choose a contact and type your message.");openApp("WhatsApp")}return}
-if(s.startsWith("remind")||s.includes("reminder")){say("I can open your phone’s reminder or calendar app. Add the reminder there and check its date and time.");window.location.href="https://calendar.google.com/calendar/u/0/r/eventedit";return}
-if(s.startsWith("search ")) {let q=c.replace(/^search\s+/i,"");say("Searching the web for: "+q);window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");return}
-if(s.includes("who are you")||s.includes("un yar")||s.includes("nee yar")){say("I’m SARA, your personal AI companion. I can help with supported voice commands, app shortcuts and quick actions.");return}
-if(s.includes("hello")||s.includes("hi")||s.includes("vanakkam")){say("Vanakkam macha! Sollu, enna help venum?");return}
-if(s.includes("help")||s.includes("enna panna")){say("Try: open WhatsApp, open YouTube, time enna, search weather Chennai, or remind me.");return}
-say("I heard you: “"+c+"”. For open-ended AI answers, connect an AI service in a future version. I won’t pretend to control phone features that the browser cannot access.");}
-function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify("Voice recognition isn’t available in this browser. Try Chrome on Android, allow microphone access, or type your command.");return}
-let r=new SR();r.lang="en-IN";r.continuous=false;r.interimResults=false;r.maxAlternatives=1;$("orbWrap").classList.add("listening");$("status").textContent="Listening…";r.onresult=e=>{let t=e.results[0][0].transcript;$("command").value=t;handle(t)};r.onerror=e=>notify("Voice input issue: "+e.error+". You can type a command instead.");r.onend=()=>{$("orbWrap").classList.remove("listening");$("status").textContent="SARA is ready • Tamil / English / Tanglish"};try{r.start()}catch(err){notify("Could not start microphone. Allow microphone permission in Chrome and try again, or type your command.");$("orbWrap").classList.remove("listening");$("status").textContent="SARA is ready • Tamil / English / Tanglish"}}
-$("orb").onclick=listen;$("orb").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();listen()}};$("send").onclick=()=>{handle($("command").value);$("command").blur()};$("command").addEventListener("keydown",e=>{if(e.key==="Enter")$("send").click()});
-document.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>openApp(b.dataset.app));
-$("time").onclick=()=>handle("time enna");$("remind").onclick=()=>handle("remind me");$("search").onclick=()=>{let q=prompt("What should SARA search for?");if(q)handle("search "+q)};$("speak").onclick=()=>speak(lastReply);
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e});$("install").onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}else notify("To install: open this site in Chrome → ⋮ menu → Add to Home screen / Install app. This requires the site to be hosted securely (HTTPS).")};
+const $=id=>document.getElementById(id);
+let lastReply="I’m here. Tell me what you need.";
+let deferredPrompt=null;
 
-</script></body></html>
+function notify(text){
+  $("notice").textContent=text;
+  $("notice").classList.add("show");
+}
+function hideNotice(){
+  $("notice").classList.remove("show");
+}
+
+/* Text-to-speech: replies are spoken automatically after the user taps Send
+   or uses the microphone. Some browsers require the first speech after a tap. */
+function speak(text){
+  if(!("speechSynthesis" in window)){
+    notify("Voice output is not supported in this browser. Try the latest Chrome.");
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang="en-IN";
+  utterance.rate=0.95;
+  utterance.pitch=1.05;
+  utterance.volume=1;
+
+  const voices=window.speechSynthesis.getVoices();
+  const chosenVoice=voices.find(v=>v.lang.toLowerCase()==="en-in")
+    || voices.find(v=>v.lang.toLowerCase().startsWith("en"));
+  if(chosenVoice) utterance.voice=chosenVoice;
+
+  utterance.onerror=event=>{
+    notify("Voice playback failed: "+event.error+". Check your phone's Text-to-speech settings and media volume.");
+  };
+  window.speechSynthesis.resume();
+  window.speechSynthesis.speak(utterance);
+}
+
+function say(text){
+  lastReply=text;
+  $("reply").textContent=text;
+  speak(text);
+}
+
+const appLinks={
+  "whatsapp":"https://wa.me/",
+  "youtube":"https://www.youtube.com/",
+  "instagram":"https://www.instagram.com/",
+  "gpay":"https://pay.google.com/",
+  "google pay":"https://pay.google.com/",
+  "camera":"intent://camera#Intent;scheme=android-app;end",
+  "maps":"https://maps.google.com/",
+  "gmail":"https://mail.google.com/",
+  "chrome":"https://www.google.com/"
+};
+
+function openApp(name){
+  let key=name.toLowerCase().trim();
+  let url=appLinks[key];
+  if(!url){
+    say("I can’t launch "+name+" directly from the browser yet. Try the app shortcut or open it from your phone.");
+    return;
+  }
+  say("Opening "+name+".");
+  if(key.includes("gpay")) notify("SARA can open GPay, but cannot make or approve payments. Verify every payment inside the official GPay app.");
+  window.location.href=url;
+}
+
+function handle(raw){
+  let c=raw.trim();
+  if(!c)return;
+  $("said").textContent=c;
+  hideNotice();
+  let s=c.toLowerCase();
+
+  if(/^(open|launch|start)\s+/.test(s)){
+    let n=c.replace(/^(open|launch|start)\s+/i,"");
+    openApp(n);
+    return;
+  }
+  if(s.includes("time")||s.includes("date")||s.includes("mani")||s.includes("neram")){
+    let d=new Date();
+    say("It’s "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+" on "+d.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"})+".");
+    return;
+  }
+  if(s.includes("whatsapp")&&(/message|text|send|type/.test(s))){
+    let match=c.match(/(?:message|text|send|type)(?:\s+to)?\s+(.+?)\s+(?:saying|that)\s+(.+)/i);
+    if(match){
+      let msg=match[2];
+      say("I can prepare a WhatsApp message. Choose the contact in WhatsApp and review before sending.");
+      window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
+    }else{
+      say("Opening WhatsApp. You can choose a contact and type your message.");
+      openApp("WhatsApp");
+    }
+    return;
+  }
+  if(s.startsWith("remind")||s.includes("reminder")){
+    say("I can open your phone’s reminder or calendar app. Add the reminder there and check its date and time.");
+    window.location.href="https://calendar.google.com/calendar/u/0/r/eventedit";
+    return;
+  }
+  if(s.startsWith("search ")){
+    let q=c.replace(/^search\s+/i,"");
+    say("Searching the web for: "+q);
+    window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");
+    return;
+  }
+  if(s.includes("who are you")||s.includes("un yar")||s.includes("nee yar")){
+    say("I’m SARA, your personal AI companion. I can help with supported voice commands, app shortcuts and quick actions.");
+    return;
+  }
+  if(s.includes("hello")||s.includes("hi")||s.includes("vanakkam")){
+    say("Vanakkam macha! Sollu, enna help venum?");
+    return;
+  }
+  if(s.includes("help")||s.includes("enna panna")){
+    say("Try: open WhatsApp, open YouTube, time enna, search weather Chennai, or remind me.");
+    return;
+  }
+  say("I heard you: “"+c+"”. For open-ended AI answers, connect an AI service in a future version. I won’t pretend to control phone features that the browser cannot access.");
+}
+
+function listen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    notify("Voice recognition isn’t available in this browser. Try Chrome on Android, allow microphone access, or type your command.");
+    return;
+  }
+  let r=new SR();
+  r.lang="en-IN";
+  r.continuous=false;
+  r.interimResults=false;
+  r.maxAlternatives=1;
+  $("orbWrap").classList.add("listening");
+  $("status").textContent="Listening…";
+  r.onresult=e=>{
+    let t=e.results[0][0].transcript;
+    $("command").value=t;
+    handle(t);
+  };
+  r.onerror=e=>notify("Voice input issue: "+e.error+". You can type a command instead.");
+  r.onend=()=>{
+    $("orbWrap").classList.remove("listening");
+    $("status").textContent="SARA is ready • Tamil / English / Tanglish";
+  };
+  try{r.start();}
+  catch(err){
+    notify("Could not start microphone. Allow microphone permission in Chrome and try again, or type your command.");
+    $("orbWrap").classList.remove("listening");
+    $("status").textContent="SARA is ready • Tamil / English / Tanglish";
+  }
+}
+
+$("orb").onclick=listen;
+$("orb").onkeydown=e=>{
+  if(e.key==="Enter"||e.key===" "){
+    e.preventDefault();
+    listen();
+  }
+};
+$("send").onclick=()=>{
+  handle($("command").value);
+  $("command").blur();
+};
+$("command").addEventListener("keydown",e=>{
+  if(e.key==="Enter")$("send").click();
+});
+document.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>openApp(b.dataset.app));
+$("time").onclick=()=>handle("time enna");
+$("remind").onclick=()=>handle("remind me");
+$("search").onclick=()=>{
+  let q=prompt("What should SARA search for?");
+  if(q)handle("search "+q);
+};
+$("speak").onclick=()=>speak(lastReply);
+
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+});
+$("install").onclick=async()=>{
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt=null;
+  }else{
+    notify("To install: open this site in Chrome → ⋮ menu → Add to Home screen / Install app. This requires the site to be hosted securely (HTTPS).");
+  }
+};
+</script></body></html>'''
+
+path = Path("/mnt/data/SARA_voice_fixed_index.html")
+path.write_text(html, encoding="utf-8")
+print(f"Created {path} ({len(html)} characters)")
+
