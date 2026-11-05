@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080d1b"><meta name="description" content="SARA — your personal voice AI companion">
+
+<title>SARA — Personal AI</title>
+<style>
+:root{--bg:#070b16;--panel:#101a2d;--panel2:#14223a;--cyan:#66e5ff;--violet:#a58bff;--muted:#91a1bd;--white:#f4f8ff;--line:#263754}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 22%,#15294b 0%,#0a1122 38%,var(--bg) 76%);color:var(--white);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+.app{max-width:540px;margin:auto;min-height:100dvh;padding:env(safe-area-inset-top) 18px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 12px}.brand{font-size:27px;font-weight:800;letter-spacing:5px}.tag{font-size:9px;letter-spacing:2.8px;color:var(--cyan);margin-top:2px}.iconbtn{border:1px solid var(--line);background:#111c30;color:#dceaff;width:42px;height:42px;border-radius:14px;font-size:18px}
+.greeting{text-align:center;margin-top:22px}.greeting h1{font-size:25px;margin:0 0 7px;font-weight:650}.greeting p{margin:0;color:var(--muted);font-size:13px}
+.orb-wrap{height:285px;display:grid;place-items:center;position:relative;margin:12px 0 4px}.orb{width:205px;height:205px;border-radius:50%;display:grid;place-items:center;position:relative;cursor:pointer;background:radial-gradient(circle at 38% 30%,#c7faff 0%,#5bcdf9 12%,#2672c2 34%,#473d9e 63%,#111a42 78%);box-shadow:0 0 26px #4cdcff88,0 0 75px #735aff55,inset 0 0 28px #d8faff88;animation:float 4s ease-in-out infinite}
+.orb:before,.orb:after{content:"";position:absolute;border-radius:50%;inset:-17px;border:1px solid #65ddff66;box-shadow:0 0 20px #4bcfff33;animation:spin 12s linear infinite}.orb:after{inset:-31px;border-color:#a58bff55;animation-direction:reverse;animation-duration:18s}.orb-core{width:85px;height:85px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#fff,#9beaff 20%,#438bdf 58%,#252c78);box-shadow:0 0 35px #a4f0ff;display:grid;place-items:center;font-size:34px;color:white}
+@keyframes float{50%{transform:translateY(-7px) scale(1.025)}}@keyframes spin{to{transform:rotate(360deg)}}
+.listening .orb{animation:pulse .9s ease-in-out infinite alternate}@keyframes pulse{to{filter:brightness(1.35);transform:scale(1.05)}}
+.tap{position:absolute;bottom:0;color:var(--cyan);font-size:10px;letter-spacing:3px;font-weight:800}
+.status{text-align:center;color:var(--muted);font-size:12px;min-height:19px;margin:8px 0 16px}
+.card{background:linear-gradient(145deg,#14233bd9,#0d1729eF);border:1px solid #2b4264;border-radius:20px;padding:15px 16px;box-shadow:0 12px 35px #0003}
+.card-label{font-size:9px;letter-spacing:2px;color:var(--violet);font-weight:800;margin-bottom:8px}.said{font-size:14px;line-height:1.5;min-height:21px;overflow-wrap:anywhere}.reply{color:#d4e7ff;font-size:13px;line-height:1.5;margin-top:9px}
+.composer{display:flex;gap:8px;margin-top:12px}.composer input{min-width:0;flex:1;border-radius:14px;border:1px solid var(--line);background:#0c1527;color:white;padding:14px;font-size:14px;outline:none}.composer button,.primary{border:0;border-radius:14px;padding:0 17px;background:linear-gradient(120deg,#38bfe9,#7668e9);color:#061222;font-weight:800}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px;font-size:12px;letter-spacing:1.5px;color:#cbd9f0;font-weight:750}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.tile{background:linear-gradient(150deg,#15243b,#0e1729);border:1px solid #263957;border-radius:16px;padding:12px 4px;text-align:center;color:white;min-height:78px}.tile .emoji{font-size:22px;display:block;margin-bottom:6px}.tile span:last-child{font-size:10px;color:#c6d4e9}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:9px}.tool{border:1px solid #263957;background:#111d31;color:#eaf4ff;border-radius:15px;padding:13px;text-align:left;font-size:12px}.tool b{display:block;color:var(--cyan);margin-bottom:4px;font-size:13px}
+.footer{text-align:center;color:#647694;font-size:10px;margin:18px 0 5px;line-height:1.5}
+.notice{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;background:#382a19;border:1px solid #806037;color:#ffe0aa;font-size:11px;line-height:1.45}.notice.show{display:block}
+@media(max-height:760px){.orb-wrap{height:235px}.orb{width:170px;height:170px}.orb-core{width:72px;height:72px}}
+</style></head>
+<body><main class="app">
+<header><div><div class="brand">SARA</div><div class="tag">YOUR PERSONAL AI COMPANION</div></div><button class="iconbtn" id="install" title="Install SARA" aria-label="Install SARA">＋</button></header>
+<section class="greeting"><h1>Hey, macha.</h1><p>Your day. Your voice. Your assistant.</p></section>
+<div class="orb-wrap" id="orbWrap"><div class="orb" id="orb" role="button" tabindex="0" aria-label="Tap to speak to SARA"><div class="orb-core">✦</div></div><div class="tap">TAP THE ORB TO SPEAK</div></div>
+<div class="status" id="status">SARA is ready • Tamil / English / Tanglish</div>
+<section class="card"><div class="card-label">YOU SAID</div><div class="said" id="said">Try “open WhatsApp” or “time enna?”</div><div class="reply" id="reply">I’m here. Tell me what you need.</div>
+<div class="composer"><input id="command" placeholder="Type a command…" autocomplete="off"><button class="primary" id="send">Send</button></div><div class="notice" id="notice"></div></section>
+<div class="section-title"><span>QUICK APP ACCESS</span><span style="color:#7f91b0;font-size:9px">YOUR PHONE</span></div>
+<div class="grid">
+<button class="tile" data-app="WhatsApp"><span class="emoji">💬</span><span>WhatsApp</span></button>
+<button class="tile" data-app="YouTube"><span class="emoji">▶️</span><span>YouTube</span></button>
+<button class="tile" data-app="Instagram"><span class="emoji">📸</span><span>Instagram</span></button>
+<button class="tile" data-app="GPay"><span class="emoji">💳</span><span>GPay</span></button>
+<button class="tile" data-app="Camera"><span class="emoji">📷</span><span>Camera</span></button>
+<button class="tile" data-app="Maps"><span class="emoji">📍</span><span>Maps</span></button>
+<button class="tile" data-app="Gmail"><span class="emoji">✉️</span><span>Gmail</span></button>
+<button class="tile" data-app="Chrome"><span class="emoji">🌐</span><span>Browser</span></button>
+</div>
+<div class="section-title"><span>SARA TOOLS</span><span style="color:#7f91b0;font-size:9px">SMART ACTIONS</span></div>
+<div class="tools">
+<button class="tool" id="time"><b>◷ Time & Date</b>Ask SARA the current time</button>
+<button class="tool" id="remind"><b>♧ Reminder</b>Create a phone reminder</button>
+<button class="tool" id="search"><b>⌕ Web Search</b>Search with your browser</button>
+<button class="tool" id="speak"><b>♫ Voice Reply</b>Read SARA’s reply aloud</button>
+</div>
+<div class="footer">SARA runs with your permission. Secure payments and sensitive actions stay protected by your phone and official apps.<br>Browser edition • Online features require internet</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let lastReply="I’m here. Tell me what you need.";let deferredPrompt=null;
+function say(text){lastReply=text;$("reply").textContent=text}
+function notify(text){$("notice").textContent=text;$("notice").classList.add("show")}
+function hideNotice(){$("notice").classList.remove("show")}
+function speak(text){if(!("speechSynthesis"in window)){notify("Voice output is not supported in this browser.");return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(text);u.lang="en-IN";speechSynthesis.speak(u)}
+const appLinks={
+"whatsapp":"https://wa.me/","youtube":"https://www.youtube.com/","instagram":"https://www.instagram.com/","gpay":"https://pay.google.com/","google pay":"https://pay.google.com/","camera":"intent://camera#Intent;scheme=android-app;end","maps":"https://maps.google.com/","gmail":"https://mail.google.com/","chrome":"https://www.google.com/"
+};
+function openApp(name){let key=name.toLowerCase().trim();let url=appLinks[key];if(!url){say("I can’t launch "+name directly from the browser yet. Try the app shortcut or open it from your phone.");return}say("Opening "+name+".");window.location.href=url;if(key.includes("gpay"))notify("SARA can open GPay, but cannot make or approve payments. Verify every payment inside the official GPay app.");}
+function handle(raw){let c=raw.trim();if(!c)return;$("said").textContent=c;hideNotice();let s=c.toLowerCase();
+if(/^(open|launch|start)\s+/.test(s)){let n=c.replace(/^(open|launch|start)\s+/i,"");openApp(n);return}
+if(s.includes("time")||s.includes("date")||s.includes("mani")||s.includes("neram")){let d=new Date();say("It’s "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+" on "+d.toLocaleDateString([],{weekday:"long",day:"numeric",month:"long"})+".");return}
+if(s.includes("whatsapp")&&(/message|text|send|type/.test(s))){let match=c.match(/(?:message|text|send|type)(?:\s+to)?\s+(.+?)\s+(?:saying|that)\s+(.+)/i);if(match){let who=match[1],msg=match[2];say("I can prepare a WhatsApp message. Choose the contact in WhatsApp and review before sending.");window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");}else{say("Opening WhatsApp. You can choose a contact and type your message.");openApp("WhatsApp")}return}
+if(s.startsWith("remind")||s.includes("reminder")){say("I can open your phone’s reminder or calendar app. Add the reminder there and check its date and time.");window.location.href="https://calendar.google.com/calendar/u/0/r/eventedit";return}
+if(s.startsWith("search ")) {let q=c.replace(/^search\s+/i,"");say("Searching the web for: "+q);window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");return}
+if(s.includes("who are you")||s.includes("un yar")||s.includes("nee yar")){say("I’m SARA, your personal AI companion. I can help with supported voice commands, app shortcuts and quick actions.");return}
+if(s.includes("hello")||s.includes("hi")||s.includes("vanakkam")){say("Vanakkam macha! Sollu, enna help venum?");return}
+if(s.includes("help")||s.includes("enna panna")){say("Try: open WhatsApp, open YouTube, time enna, search weather Chennai, or remind me.");return}
+say("I heard you: “"+c+"”. For open-ended AI answers, connect an AI service in a future version. I won’t pretend to control phone features that the browser cannot access.");}
+function listen(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify("Voice recognition isn’t available in this browser. Try Chrome on Android, allow microphone access, or type your command.");return}
+let r=new SR();r.lang="en-IN";r.interimResults=false;r.maxAlternatives=1;$("orbWrap").classList.add("listening");$("status").textContent="Listening…";r.onresult=e=>{let t=e.results[0][0].transcript;$("command").value=t;handle(t)};r.onerror=e=>notify("Voice input issue: "+e.error+". You can type a command instead.");r.onend=()=>{$("orbWrap").classList.remove("listening");$("status").textContent="SARA is ready • Tamil / English / Tanglish"};r.start()}
+$("orb").onclick=listen;$("orb").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();listen()}};$("send").onclick=()=>{handle($("command").value);$("command").blur()};$("command").addEventListener("keydown",e=>{if(e.key==="Enter")$("send").click()});
+document.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>openApp(b.dataset.app));
+$("time").onclick=()=>handle("time enna");$("remind").onclick=()=>handle("remind me");$("search").onclick=()=>{let q=prompt("What should SARA search for?");if(q)handle("search "+q)};$("speak").onclick=()=>speak(lastReply);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e});$("install").onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}else notify("To install: open this site in Chrome → ⋮ menu → Add to Home screen / Install app. This requires the site to be hosted securely (HTTPS).")};
+
+</script></body></html>
